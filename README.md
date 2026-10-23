@@ -29,6 +29,7 @@ Luego visita `http://localhost:3000`.
 | `←` `→`   | Rotar nave |
 | `↑`       | Propulsar  |
 | `Espacio` | Disparar   |
+| `S`       | Cambiar skin de la nave |
 
 ## Puntuación
 
@@ -41,5 +42,6 @@ Luego visita `http://localhost:3000`.
 ## Características
 
 - 3 vidas con invencibilidad temporal al reaparecer (parpadeo)
+- 3 skins de nave seleccionables durante la partida
 - Asteroides se parten en fragmentos más pequeños al ser destruidos
 - Partículas de explosión al destruir asteroides
