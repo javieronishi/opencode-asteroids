@@ -61,17 +61,21 @@ class Bullet {
 const RADII  = [0, 16, 30, 50];   // por tamaño 1, 2, 3
 const SPEEDS = [0, 85, 55, 32];   // velocidad base por tamaño
 const POINTS = [0, 100, 50, 20];  // puntos por tamaño
+const SHOOTING_STAR_CHANCE = 0.15;
 
 class Asteroid {
-  constructor(x, y, size = 3) {
+  constructor(x, y, size = 3, isShootingStar = false) {
     this.x    = x;
     this.y    = y;
     this.size = size;
     this.radius = RADII[size];
     this.dead = false;
+    this.isShootingStar = isShootingStar;
+    this.ttl = isShootingStar ? 8 : Infinity;
 
     const angle = rand(0, Math.PI * 2);
-    const speed = SPEEDS[size] + rand(-15, 15);
+    const normalSpeed = SPEEDS[size] + rand(-15, 15);
+    const speed = isShootingStar ? normalSpeed * 3 : normalSpeed;
     this.vx = Math.cos(angle) * speed;
     this.vy = Math.sin(angle) * speed;
     this.rotSpeed = rand(-1.2, 1.2);
@@ -91,6 +95,8 @@ class Asteroid {
     this.x   = wrap(this.x + this.vx * dt, W);
     this.y   = wrap(this.y + this.vy * dt, H);
     this.rot += this.rotSpeed * dt;
+    this.ttl -= dt;
+    if (this.ttl <= 0) this.dead = true;
   }
 
   split() {
@@ -104,8 +110,19 @@ class Asteroid {
   draw() {
     ctx.save();
     ctx.translate(this.x, this.y);
+
+    if (this.isShootingStar) {
+      const speed = Math.hypot(this.vx, this.vy);
+      ctx.strokeStyle = 'rgba(255, 182, 72, 0.75)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(-this.vx / speed * 42, -this.vy / speed * 42);
+      ctx.stroke();
+    }
+
     ctx.rotate(this.rot);
-    ctx.strokeStyle = '#fff';
+    ctx.strokeStyle = this.isShootingStar ? '#ffb648' : '#fff';
     ctx.lineWidth   = 1.5;
     ctx.lineJoin    = 'round';
     ctx.beginPath();
@@ -298,7 +315,7 @@ function spawnAsteroids(count) {
       x = rand(0, W);
       y = rand(0, H);
     } while (Math.hypot(x - W / 2, y - H / 2) < SAFE_DIST);
-    asteroids.push(new Asteroid(x, y, 3));
+    asteroids.push(new Asteroid(x, y, 3, Math.random() < SHOOTING_STAR_CHANCE));
   }
 }
 
@@ -356,6 +373,7 @@ function update(dt) {
     particles.forEach(p => p.update(dt));
     particles = particles.filter(p => !p.dead);
     asteroids.forEach(a => a.update(dt));
+    asteroids = asteroids.filter(a => !a.dead);
     if (deadTimer <= 0) { state = 'playing'; ship.reset(); }
     return;
   }
@@ -374,6 +392,7 @@ function update(dt) {
   bullets   = bullets.filter(b => !b.dead);
   particles = particles.filter(p => !p.dead);
   powerUps  = powerUps.filter(p => !p.dead);
+  asteroids = asteroids.filter(a => !a.dead);
 
   // Bala vs asteroide
   const newAsteroids = [];
